@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     await resend.emails.send({
       from: "School Bus <onboarding@resend.dev>",
-      to: "my.training.cource@gmail.com",
+      to: "schoolbussystem11@gmail.com",
       subject: `📊 تقرير رحلة ${busName}`,
       html: `
         <div style="font-family: Arial; padding:20px;">
