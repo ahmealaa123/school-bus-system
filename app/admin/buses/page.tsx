@@ -250,10 +250,10 @@ export default function BusesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 text-lg mb-2 font-medium">الرقم القومي</label>
+                  <label className="block text-gray-300 text-lg mb-2 font-medium">الرقم الوطني</label>
                   <input
                     type="text"
-                    placeholder="الرقم القومي"
+                    placeholder="الرقم الوطني"
                     value={studentInputs[bus.id]?.nationalId || ""}
                     onChange={(e) => handleInputChange(bus.id, "nationalId", e.target.value)}
                     className="w-full p-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all outline-none text-lg"
