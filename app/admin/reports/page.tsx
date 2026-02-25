@@ -132,7 +132,6 @@ export default function ReportsPage() {
       doc.setFont("Amiri");
 
       doc.setFontSize(22);
-      // استخدام عرض ثابت للـ landscape (حوالي 297 مم = 842 نقطة)
       const pageWidth = 842;
       doc.text("تقارير نظام الباصات المدرسية", pageWidth - 14, 20, { align: "right" });
 
@@ -195,12 +194,12 @@ export default function ReportsPage() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
       </div>
 
-      <div className="relative z-10 p-6 md:p-10">
+      <div className="relative z-10 p-4 sm:p-6 md:p-10 container mx-auto max-w-7xl">
         <motion.h1
           initial={{ opacity: 0, y: -60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tighter text-center mb-4"
+          className="text-4xl md:text-7xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tighter text-center mb-6 md:mb-8"
         >
           التقارير الشاملة
         </motion.h1>
@@ -209,7 +208,7 @@ export default function ReportsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-xl md:text-2xl text-gray-300 font-light text-center mb-12"
+          className="text-lg md:text-2xl text-gray-300 font-light text-center mb-8 md:mb-12"
         >
           استعراض وتصدير جميع الرحلات والحضور
         </motion.p>
@@ -219,9 +218,9 @@ export default function ReportsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="glass p-6 md:p-8 rounded-3xl mb-12"
+          className="glass p-6 rounded-3xl mb-8 md:mb-12"
         >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div className="flex flex-col">
               <label className="text-sm text-gray-300 mb-1 flex items-center gap-2">
                 <FaBus /> الباص
@@ -229,7 +228,7 @@ export default function ReportsPage() {
               <select
                 value={busFilter}
                 onChange={(e) => setBusFilter(e.target.value)}
-                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all text-base"
               >
                 <option value="all">جميع الباصات</option>
                 {[...new Set(reports.map((r) => r.bus))].map((bus) => (
@@ -245,7 +244,7 @@ export default function ReportsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all text-base"
               >
                 <option value="all">الكل</option>
                 <option value="active">نشطة</option>
@@ -261,7 +260,7 @@ export default function ReportsPage() {
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all text-base"
               />
             </div>
 
@@ -273,7 +272,7 @@ export default function ReportsPage() {
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                className="bg-gray-700 p-3 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all text-base"
               />
             </div>
 
@@ -281,18 +280,18 @@ export default function ReportsPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={applyFilter}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-bold shadow-lg transition-all"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-bold shadow-lg transition-all text-base"
               >
                 تطبيق الفلتر
               </motion.button>
             </div>
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-wrap gap-4 mt-6">
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={exportExcel}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 p-3 rounded-lg font-bold shadow-lg transition-all"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 p-3 rounded-lg font-bold shadow-lg transition-all text-base"
             >
               <FaFileExcel /> Excel
             </motion.button>
@@ -300,7 +299,7 @@ export default function ReportsPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={exportPDF}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 p-3 rounded-lg font-bold shadow-lg transition-all"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 p-3 rounded-lg font-bold shadow-lg transition-all text-base"
             >
               <FaFilePdf /> PDF
             </motion.button>
@@ -317,13 +316,13 @@ export default function ReportsPage() {
           <table className="w-full text-right min-w-max">
             <thead className="bg-gradient-to-r from-indigo-700 to-purple-700">
               <tr>
-                <th className="p-4">الباص</th>
-                <th className="p-4">الرحلة</th>
-                <th className="p-4">الحالة</th>
-                <th className="p-4">الحضور</th>
-                <th className="p-4">الغياب</th>
-                <th className="p-4">التاريخ</th>
-                <th className="p-4">تفاصيل</th>
+                <th className="p-3 md:p-4">الباص</th>
+                <th className="p-3 md:p-4">الرحلة</th>
+                <th className="p-3 md:p-4">الحالة</th>
+                <th className="p-3 md:p-4">الحضور</th>
+                <th className="p-3 md:p-4">الغياب</th>
+                <th className="p-3 md:p-4">التاريخ</th>
+                <th className="p-3 md:p-4">تفاصيل</th>
               </tr>
             </thead>
             <tbody>
@@ -333,21 +332,21 @@ export default function ReportsPage() {
                   whileHover={{ backgroundColor: "rgba(99, 102, 241, 0.15)" }}
                   className="border-b border-gray-700 hover:bg-indigo-900/30 transition-colors"
                 >
-                  <td className="p-4">{r.bus}</td>
-                  <td className="p-4 font-mono">{r.tripId.slice(0, 8)}...</td>
-                  <td className="p-4">
+                  <td className="p-3 md:p-4">{r.bus}</td>
+                  <td className="p-3 md:p-4 font-mono">{r.tripId.slice(0, 8)}...</td>
+                  <td className="p-3 md:p-4">
                     <span className={r.status === "active" ? "text-green-400" : "text-red-400"}>
                       {r.status === "active" ? "نشطة" : "منتهية"}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-green-400">{r.students}</td>
-                  <td className="p-4 font-bold text-red-400">{r.absentCount}</td>
-                  <td className="p-4">{r.startedAt}</td>
-                  <td className="p-4">
+                  <td className="p-3 md:p-4 font-bold text-green-400">{r.students}</td>
+                  <td className="p-3 md:p-4 font-bold text-red-400">{r.absentCount}</td>
+                  <td className="p-3 md:p-4">{r.startedAt}</td>
+                  <td className="p-3 md:p-4">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => openModal(r)}
-                      className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg text-sm font-medium transition-all"
+                      className="bg-indigo-600 hover:bg-indigo-700 px-4 md:px-6 py-2 rounded-lg text-sm md:text-base font-medium transition-all"
                     >
                       عرض التفاصيل
                     </motion.button>
@@ -384,12 +383,12 @@ export default function ReportsPage() {
                   leaveFrom="opacity-100 scale-100"
                   leaveTo="opacity-0 scale-95"
                 >
-                  <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gray-900 p-8 text-left align-middle shadow-xl transition-all border border-indigo-500/30">
-                    <Dialog.Title as="h3" className="text-2xl font-bold leading-6 text-white mb-6 flex items-center gap-3">
+                  <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gray-900 p-6 md:p-8 text-left align-middle shadow-xl transition-all border border-indigo-500/30">
+                    <Dialog.Title as="h3" className="text-xl md:text-2xl font-bold leading-6 text-white mb-6 flex items-center gap-3">
                       <FaBus className="text-indigo-400" /> تفاصيل الرحلة - {selectedTrip?.bus}
                     </Dialog.Title>
 
-                    <div className="mt-2 space-y-6">
+                    <div className="mt-2 space-y-6 text-sm md:text-base">
                       <div className="grid grid-cols-2 gap-4 text-gray-300">
                         <div>
                           <p className="font-semibold">الحالة:</p>
@@ -412,7 +411,7 @@ export default function ReportsPage() {
                       </div>
 
                       <div>
-                        <h4 className="text-lg font-semibold text-green-400 mb-2 flex items-center gap-2">
+                        <h4 className="text-base md:text-lg font-semibold text-green-400 mb-2 flex items-center gap-2">
                           <FaCheckCircle /> الحاضرين ({selectedTrip?.students})
                         </h4>
                         <ul className="list-disc pl-6 space-y-1 text-gray-200">
@@ -423,7 +422,7 @@ export default function ReportsPage() {
                       </div>
 
                       <div>
-                        <h4 className="text-lg font-semibold text-red-400 mb-2 flex items-center gap-2">
+                        <h4 className="text-base md:text-lg font-semibold text-red-400 mb-2 flex items-center gap-2">
                           <FaTimesCircle /> الغائبين ({selectedTrip?.absentCount})
                         </h4>
                         <ul className="list-disc pl-6 space-y-1 text-gray-200">
@@ -439,7 +438,7 @@ export default function ReportsPage() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         type="button"
-                        className="inline-flex justify-center rounded-lg border border-transparent bg-red-600 px-6 py-3 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                        className="inline-flex justify-center rounded-lg border border-transparent bg-red-600 px-6 py-3 text-sm md:text-base font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                         onClick={() => setIsOpen(false)}
                       >
                         إغلاق

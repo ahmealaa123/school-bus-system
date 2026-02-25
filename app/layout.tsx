@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google"; // خط عربي ممتاز وخفيف
+import { Cairo } from "next/font/google";
 import "./globals.css";
 
-// استخدم خط Cairo للدعم الكامل للعربية
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   variable: "--font-cairo",
@@ -12,7 +11,6 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: "نظام إدارة الباصات المدرسية",
   description: "نظام ذكي لتسجيل الحضور والغياب في الباصات المدرسية",
-  viewport: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no", // ← ده اللي بيحل المشكلة
 };
 
 export default function RootLayout({
@@ -23,14 +21,13 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <head>
-        {/* تأكيد الـ viewport مرة تانية */}
+        {/* ده اللي هيحل مشكلة الضيق على الموبايل */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+          content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
         />
-        {/* منع التكبير غير المرغوب */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body
         className={`${cairo.variable} antialiased min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-indigo-950 via-purple-950 to-black`}

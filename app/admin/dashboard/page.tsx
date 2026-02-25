@@ -21,7 +21,7 @@ interface Trip {
   presentCount: number;
   absentCount: number;
   status: string;
-  supervisorName?: string; // ← الإضافة الجديدة
+  supervisorName?: string; // ← اسم المشرفة الخاص بالباص
 }
 
 export default function DashboardPage() {
@@ -46,7 +46,7 @@ export default function DashboardPage() {
     for (const busDoc of busesSnap.docs) {
       const busId = busDoc.id;
       const busName = busDoc.data().name || `باص ${busId}`;
-      const supervisorName = busDoc.data().supervisorName || "غير محدد"; // ← جلب اسم المشرفة
+      const supervisorName = busDoc.data().supervisorName || "غير محدد"; // ← جلب اسم المشرفة من الباص
 
       const tripsSnap = await getDocs(collection(db, "buses", busId, "trips"));
 
@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-950 to-black">
-      {/* خلفية blobs متحركة متسقة مع اللوجين */}
+      {/* خلفية blobs */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute top-0 -left-20 w-[500px] h-[500px] bg-purple-600/30 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/30 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
@@ -111,7 +111,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative z-10 p-4 sm:p-6 md:p-10 container mx-auto max-w-7xl">
-        {/* العنوان الكبير مع حركة وgradient */}
+        {/* العنوان */}
         <motion.div
           initial={{ opacity: 0, y: -80 }}
           animate={{ opacity: 1, y: 0 }}
@@ -141,7 +141,7 @@ export default function DashboardPage() {
           </motion.p>
         </motion.div>
 
-        {/* الكروت الكبيرة */}
+        {/* الكروت */}
         {loading ? (
           <div className="flex justify-center items-center h-48 md:h-64">
             <motion.div
@@ -159,11 +159,11 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               whileHover={{ scale: 1.05 }}
-              className="glass p-6 md:p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-indigo-500/20"
+              className="glass p-6 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-indigo-500/20"
             >
-              <FaBus className="text-6xl md:text-7xl text-indigo-400 mb-4" />
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">عدد الرحلات</h3>
-              <p className="text-5xl md:text-6xl font-extrabold text-indigo-300">{totalTrips}</p>
+              <FaBus className="text-5xl md:text-7xl text-indigo-400 mb-3 md:mb-4" />
+              <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">عدد الرحلات</h3>
+              <p className="text-4xl md:text-6xl font-extrabold text-indigo-300">{totalTrips}</p>
             </motion.div>
 
             <motion.div
@@ -171,11 +171,11 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               whileHover={{ scale: 1.05 }}
-              className="glass p-6 md:p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-green-500/20"
+              className="glass p-6 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-green-500/20"
             >
-              <FaPlayCircle className="text-6xl md:text-7xl text-green-400 mb-4" />
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">النشطة</h3>
-              <p className="text-5xl md:text-6xl font-extrabold text-green-300">{activeTrips}</p>
+              <FaPlayCircle className="text-5xl md:text-7xl text-green-400 mb-3 md:mb-4" />
+              <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">النشطة</h3>
+              <p className="text-4xl md:text-6xl font-extrabold text-green-300">{activeTrips}</p>
             </motion.div>
 
             <motion.div
@@ -183,11 +183,11 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               whileHover={{ scale: 1.05 }}
-              className="glass p-6 md:p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-purple-500/20"
+              className="glass p-6 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-purple-500/20"
             >
-              <FaUsers className="text-6xl md:text-7xl text-purple-400 mb-4" />
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">إجمالي الحضور</h3>
-              <p className="text-5xl md:text-6xl font-extrabold text-purple-300">{totalAttendance}</p>
+              <FaUsers className="text-5xl md:text-7xl text-purple-400 mb-3 md:mb-4" />
+              <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">إجمالي الحضور</h3>
+              <p className="text-4xl md:text-6xl font-extrabold text-purple-300">{totalAttendance}</p>
             </motion.div>
 
             <motion.div
@@ -195,11 +195,11 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               whileHover={{ scale: 1.05 }}
-              className="glass p-6 md:p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-red-500/20"
+              className="glass p-6 rounded-3xl flex flex-col items-center text-center backdrop-blur-xl border border-red-500/20"
             >
-              <FaTimesCircle className="text-6xl md:text-7xl text-red-400 mb-4" />
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">الغياب</h3>
-              <p className="text-5xl md:text-6xl font-extrabold text-red-300">
+              <FaTimesCircle className="text-5xl md:text-7xl text-red-400 mb-3 md:mb-4" />
+              <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">الغياب</h3>
+              <p className="text-4xl md:text-6xl font-extrabold text-red-300">
                 {trips.reduce((sum, t) => sum + t.absentCount, 0)}
               </p>
             </motion.div>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
               whileHover={{ scale: 1.02 }}
-              className="glass p-4 sm:p-6 md:p-8 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 backdrop-blur-xl border border-indigo-500/20 shadow-xl transition-all duration-300"
+              className="glass p-4 sm:p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 backdrop-blur-xl border border-indigo-500/20 shadow-xl transition-all duration-300"
             >
               <Link
                 href={`/admin/dashboard/${trip.busId}/${trip.id}`}
