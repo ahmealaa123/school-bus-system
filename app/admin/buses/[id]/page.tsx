@@ -76,9 +76,7 @@ export default function BusDetailsPage() {
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-950 to-black p-4 sm:p-6 md:p-10">
       {/* خلفية blobs */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-0 -left-20 w-[500px] h-[500px] bg-purple-600/30 rounded-full blur-3xl animate-blob"></div>
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/30 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-pink-600/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+        {/* ... */}
       </div>
 
       <div className="relative z-10 container mx-auto max-w-5xl">
