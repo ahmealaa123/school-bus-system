@@ -14,11 +14,12 @@ import {
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaBus, FaUserPlus, FaPlay, FaStop, FaQrcode } from "react-icons/fa";
+import { FaBus, FaUserPlus, FaPlay, FaStop, FaQrcode, FaEdit, FaTrash } from "react-icons/fa";
 
 export default function BusesPage() {
   const [buses, setBuses] = useState<any[]>([]);
   const [studentInputs, setStudentInputs] = useState<any>({});
+  const [supervisorNameInput, setSupervisorNameInput] = useState<any>({});
   const [activeTrips, setActiveTrips] = useState<any>({});
 
   useEffect(() => {
@@ -62,6 +63,13 @@ export default function BusesPage() {
     }));
   };
 
+  const handleSupervisorChange = (busId: string, value: string) => {
+    setSupervisorNameInput((prev: any) => ({
+      ...prev,
+      [busId]: value,
+    }));
+  };
+
   const addStudent = async (busId: string) => {
     const student = studentInputs[busId];
     if (!student?.name) return alert("أدخل اسم الطالب");
@@ -79,6 +87,35 @@ export default function BusesPage() {
     }));
 
     alert("تم إضافة الطالب بنجاح ✔");
+    fetchBuses();
+  };
+
+  const updateSupervisor = async (busId: string) => {
+    const name = supervisorNameInput[busId]?.trim();
+    if (!name) return alert("أدخل اسم المشرفة");
+
+    await updateDoc(doc(db, "buses", busId), {
+      supervisorName: name,
+    });
+
+    setSupervisorNameInput((prev: any) => ({
+      ...prev,
+      [busId]: "",
+    }));
+
+    alert("تم تحديث اسم المشرفة بنجاح ✔");
+    fetchBuses();
+  };
+
+  const deleteSupervisor = async (busId: string) => {
+    if (!confirm("متأكد من حذف اسم المشرفة؟")) return;
+
+    await updateDoc(doc(db, "buses", busId), {
+      supervisorName: "",
+    });
+
+    alert("تم حذف اسم المشرفة بنجاح");
+    fetchBuses();
   };
 
   const startTrip = async (busId: string) => {
@@ -106,7 +143,6 @@ export default function BusesPage() {
       [busId]: null,
     }));
 
-    // بعد الإنهاء يدخل مباشرة على صفحة الاسكان
     window.location.href = `/admin/buses/${busId}/scan`;
   };
 
@@ -118,12 +154,12 @@ export default function BusesPage() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
       </div>
 
-      <div className="relative z-10 p-6 md:p-10">
+      <div className="relative z-10 p-4 sm:p-6 md:p-10 container mx-auto max-w-7xl">
         <motion.h1
           initial={{ opacity: 0, y: -60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tighter text-center mb-4"
+          className="text-4xl md:text-7xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tighter text-center mb-6 md:mb-8"
         >
           إدارة الباصات
         </motion.h1>
@@ -132,12 +168,12 @@ export default function BusesPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-xl md:text-2xl text-gray-300 font-light text-center mb-12"
+          className="text-lg md:text-2xl text-gray-300 font-light text-center mb-8 md:mb-12"
         >
           تحكم كامل في جميع الباصات والطلاب
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {buses.map((bus) => (
             <motion.div
               key={bus.id}
@@ -145,19 +181,60 @@ export default function BusesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: bus.id * 0.1 }}
               whileHover={{ scale: 1.03, y: -8 }}
-              className="glass p-8 rounded-3xl border border-indigo-500/20 shadow-2xl hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-all duration-300"
+              className="glass p-6 md:p-8 rounded-3xl border border-indigo-500/20 shadow-2xl hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-all duration-300"
             >
-              {/* عنوان الباص + دخول للتفاصيل */}
-              <Link href={`/admin/buses/${bus.id}`}>
-                <div className="flex items-center gap-4 mb-6 cursor-pointer">
+              {/* عنوان الباص + اسم المشرفة + أزرار تعديل/حذف */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <Link href={`/admin/buses/${bus.id}`} className="flex items-center gap-4 cursor-pointer w-full sm:w-auto">
                   <div className="w-14 h-14 bg-indigo-600/20 rounded-full flex items-center justify-center">
                     <FaBus className="text-3xl text-indigo-400" />
                   </div>
                   <h2 className="text-3xl font-bold text-white hover:text-indigo-300 transition">
                     {bus.name}
                   </h2>
+                </Link>
+
+                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                  {bus.supervisorName && (
+                    <div className="text-sm text-indigo-300 bg-indigo-900/30 px-3 py-1 rounded-full">
+                      مشرفة: {bus.supervisorName}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        const name = prompt("أدخل اسم المشرفة الجديد:", bus.supervisorName || "");
+                        if (name !== null && name.trim() !== bus.supervisorName) {
+                          updateDoc(doc(db, "buses", bus.id), { supervisorName: name.trim() || "" });
+                          fetchBuses();
+                        }
+                      }}
+                      className="text-indigo-400 hover:text-indigo-300 text-xl"
+                    >
+                      <FaEdit />
+                    </motion.button>
+
+                    {bus.supervisorName && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (confirm("متأكد من حذف اسم المشرفة؟")) {
+                            updateDoc(doc(db, "buses", bus.id), { supervisorName: "" });
+                            fetchBuses();
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 text-xl"
+                      >
+                        <FaTrash />
+                      </motion.button>
+                    )}
+                  </div>
                 </div>
-              </Link>
+              </div>
 
               {/* الحقول */}
               <div className="space-y-5 mb-8">

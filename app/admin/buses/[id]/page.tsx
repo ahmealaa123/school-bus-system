@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import {
+  doc,
+  getDoc,
   collection,
   getDocs,
   deleteDoc,
-  doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
 import { motion } from "framer-motion";
+import { FaTrash } from "react-icons/fa";
 
 interface Student {
   id: string;
@@ -22,20 +24,27 @@ interface Student {
 export default function BusDetailsPage() {
   const { id } = useParams();
   const [students, setStudents] = useState<Student[]>([]);
+  const [supervisorName, setSupervisorName] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStudents();
+    fetchBusDetails();
   }, []);
 
-  const fetchStudents = async () => {
-    const snap = await getDocs(
-      collection(db, "buses", id as string, "students")
-    );
+  const fetchBusDetails = async () => {
+    // اسم المشرفة
+    const busDoc = await getDoc(doc(db, "buses", id as string));
+    if (busDoc.exists()) {
+      setSupervisorName(busDoc.data().supervisorName || "غير محدد");
+    }
 
-    const list: Student[] = snap.docs.map((doc) => ({
+    // الطلاب
+    const studentsSnap = await getDocs(collection(db, "buses", id as string, "students"));
+    const list: Student[] = studentsSnap.docs.map((doc) => ({
       id: doc.id,
-      ...(doc.data() as Omit<Student, "id">),
+      name: doc.data().name,
+      nationalId: doc.data().nationalId,
+      area: doc.data().area,
     }));
 
     setStudents(list);
@@ -43,76 +52,95 @@ export default function BusDetailsPage() {
   };
 
   const handleDelete = async (studentId: string) => {
-    const confirmDelete = confirm("Are you sure you want to delete this student?");
-    if (!confirmDelete) return;
+    if (!confirm("متأكد من حذف الطالب ده؟")) return;
 
-    await deleteDoc(
-      doc(db, "buses", id as string, "students", studentId)
-    );
-
-    setStudents((prev) =>
-      prev.filter((student) => student.id !== studentId)
-    );
+    await deleteDoc(doc(db, "buses", id as string, "students", studentId));
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
   };
 
   if (loading) {
     return (
-      <div className="text-white text-xl p-6">
-        Loading students...
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-950 to-black">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          className="text-8xl text-indigo-400"
+        >
+          ⏳
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-white">
-        🎓 Bus {id} Students
-      </h1>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {students.map((student) => (
-          <motion.div
-            key={student.id}
-            whileHover={{ scale: 1.03 }}
-            className="bg-[#1c2440] p-6 rounded-xl shadow-lg border border-gray-700"
-          >
-            <h2 className="text-xl font-semibold text-white mb-2">
-              {student.name}
-            </h2>
-
-            <p className="text-gray-300">
-              National ID: {student.nationalId}
-            </p>
-
-            <p className="text-gray-300 mb-4">
-              Area: {student.area}
-            </p>
-
-            <div className="bg-white p-3 rounded-lg mb-4 flex justify-center">
-              <QRCode
-                value={JSON.stringify({
-                  id: student.id,
-                  name: student.name,
-                })}
-                size={120}
-              />
-            </div>
-
-            <button
-              onClick={() => handleDelete(student.id)}
-              className="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all py-2 rounded-lg text-white font-semibold"
-            >
-              Delete Student
-            </button>
-          </motion.div>
-        ))}
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-950 to-black p-4 sm:p-6 md:p-10">
+      {/* خلفية blobs */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        {/* ... */}
       </div>
 
-      {students.length === 0 && (
-        <p className="text-gray-400">
-          No students in this bus.
-        </p>
-      )}
+      <div className="relative z-10 container mx-auto max-w-5xl">
+        <motion.h1
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl md:text-6xl font-extrabold text-center text-white mb-6 md:mb-8 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"
+        >
+          تفاصيل باص {id}
+        </motion.h1>
+
+        {supervisorName && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl md:text-2xl text-center text-indigo-300 mb-8 md:mb-10"
+          >
+            مشرفة الباص: <span className="font-bold text-white">{supervisorName}</span>
+          </motion.p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {students.map((student) => (
+            <motion.div
+              key={student.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.03 }}
+              className="glass p-6 rounded-3xl border border-indigo-500/20 shadow-xl backdrop-blur-xl"
+            >
+              <h2 className="text-2xl font-bold text-white mb-3">{student.name}</h2>
+              <p className="text-gray-300 mb-2">🆔 {student.nationalId}</p>
+              <p className="text-gray-300 mb-4">📍 {student.area}</p>
+
+              <div className="bg-white p-4 rounded-2xl mb-4 flex justify-center">
+                <QRCode value={JSON.stringify({ id: student.id, name: student.name })} size={140} />
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleDelete(student.id)}
+                className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-xl text-white font-bold transition-all flex items-center justify-center gap-2"
+              >
+                <FaTrash /> حذف الطالب
+              </motion.button>
+            </motion.div>
+          ))}
+        </div>
+
+        {students.length === 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-gray-400 text-xl mt-12"
+          >
+            لا يوجد طلاب في هذا الباص حاليًا
+          </motion.p>
+        )}
+      </div>
     </div>
   );
 }
