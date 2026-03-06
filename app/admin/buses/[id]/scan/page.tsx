@@ -11,6 +11,7 @@ import {
   query,
   where,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
@@ -33,7 +34,6 @@ export default function ScanPage() {
     timeZone: "Asia/Qatar",
   });
 
-  // متغير داخلي لتتبع آخر QR (بدل localStorage عشان يكون أسرع)
   let lastDecodedText = "";
 
   useEffect(() => {
@@ -52,10 +52,7 @@ export default function ScanPage() {
 
       if (!snap.empty) {
         const tripDoc = snap.docs[0];
-        console.log("[FETCH] رحلة نشطة:", tripDoc.id);
         setActiveTripId(tripDoc.id);
-      } else {
-        console.log("[FETCH] مفيش رحلة نشطة");
       }
     } catch (err) {
       console.error("[FETCH] خطأ:", err);
@@ -77,7 +74,6 @@ export default function ScanPage() {
         presentCount: 0,
       });
 
-      console.log("[START] رحلة جديدة:", newTrip.id);
       setActiveTripId(newTrip.id);
       setLastStudent("تم بدء الرحلة ✓");
     } catch (err) {
@@ -93,7 +89,6 @@ export default function ScanPage() {
     }
 
     try {
-      // إيقاف السكانر أولاً
       if (qrRef.current && isRunning) {
         await qrRef.current.stop();
         qrRef.current.clear();
@@ -115,8 +110,6 @@ export default function ScanPage() {
       const present = attSnap.size;
       const absent = total - present;
 
-      console.log("[END] إحصائيات:", { present, absent, total });
-
       const tripRef = doc(db, "buses", busId, "trips", activeTripId);
       await updateDoc(tripRef, {
         status: "finished",
@@ -126,6 +119,11 @@ export default function ScanPage() {
         absentCount: absent,
       });
 
+      // جلب اسم المشرفة من Firestore
+      const busDoc = await getDoc(doc(db, "buses", busId));
+      const supervisorName = busDoc.exists() ? busDoc.data()?.supervisorName || "غير محدد" : "غير محدد";
+
+      // إرسال الإيميل مع اسم المشرفة
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,12 +132,13 @@ export default function ScanPage() {
           date: today,
           presentCount: present,
           absentCount: absent,
+          supervisorName,
         }),
       });
 
       setLastStudent(`تم الإنهاء ✓ حضور: ${present} | غياب: ${absent}`);
       setActiveTripId(null);
-      lastDecodedText = ""; // reset
+      lastDecodedText = "";
     } catch (err) {
       console.error("[END] خطأ:", err);
       setLastStudent("خطأ في الإنهاء");
@@ -152,20 +151,18 @@ export default function ScanPage() {
       return;
     }
 
-    // إيقاف أي سكانر قديم تمامًا قبل البدء
     if (qrRef.current) {
       try {
         await qrRef.current.stop();
         qrRef.current.clear();
         qrRef.current = null;
-        console.log("[SCANNER] تم إيقاف سكانر قديم");
       } catch (e) {
         console.warn("[SCANNER] مشكلة إيقاف قديم:", e);
       }
     }
 
     setScanLock(false);
-    lastDecodedText = ""; // reset مهم
+    lastDecodedText = "";
 
     const qr = new Html5Qrcode("reader");
     qrRef.current = qr;
@@ -176,18 +173,10 @@ export default function ScanPage() {
         { facingMode: cameraFacing },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         async (decodedText) => {
-          // لو نفس النص تمامًا → تجاهل فوري بدون أي تأخير
-          if (decodedText === lastDecodedText) {
-            return;
-          }
-
+          if (decodedText === lastDecodedText) return;
           lastDecodedText = decodedText;
 
-          console.log("━━━━━━━━━━━━━");
-          console.log("[QR] قراءة:", decodedText);
-
           if (scanLock) return;
-
           setScanLock(true);
 
           try {
@@ -195,9 +184,7 @@ export default function ScanPage() {
 
             try {
               student = JSON.parse(decodedText);
-              console.log("[QR] JSON:", student?.id, student?.name);
             } catch {
-              console.log("[QR] بحث Firestore...");
               const q = query(
                 collection(db, "buses", busId, "students"),
                 where("id", "==", decodedText)
@@ -211,7 +198,6 @@ export default function ScanPage() {
               }
 
               student = snap.docs[0].data();
-              console.log("[QR] وجد:", student?.id, student?.name);
             }
 
             if (!student?.id) {
@@ -220,15 +206,7 @@ export default function ScanPage() {
               return;
             }
 
-            const attRef = collection(
-              db,
-              "buses",
-              busId,
-              "trips",
-              activeTripId,
-              "attendance"
-            );
-
+            const attRef = collection(db, "buses", busId, "trips", activeTripId, "attendance");
             const checkQ = query(attRef, where("studentId", "==", student.id), limit(1));
             const existing = await getDocs(checkQ);
 
@@ -247,24 +225,20 @@ export default function ScanPage() {
             });
 
             setLastStudent(`✅ ${student.name || student.id}`);
-            console.log("[QR] تسجيل ناجح");
-
           } catch (err: any) {
             console.error("[QR] خطأ:", err);
             setLastStudent("⚠️ خطأ");
           }
 
-          // تأخير قصير جدًا
           setTimeout(() => {
             setScanLock(false);
-            lastDecodedText = ""; // reset فوري للسماح بالقراءة التالية مباشرة
+            lastDecodedText = "";
           }, 400);
         }
       );
 
       setIsRunning(true);
       setLastStudent("الماسح شغال...");
-      console.log("[SCANNER] تم التشغيل");
     } catch (err: any) {
       console.error("[SCANNER] فشل التشغيل:", err);
       setLastStudent("فشل الكاميرا: " + (err.message || ""));
@@ -334,7 +308,7 @@ export default function ScanPage() {
                 </button>
 
                 <button
-                  onClick={() => setCameraFacing(p => p === "environment" ? "user" : "environment")}
+                  onClick={() => setCameraFacing((p) => (p === "environment" ? "user" : "environment"))}
                   className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-medium shadow"
                 >
                   تبديل الكاميرا
