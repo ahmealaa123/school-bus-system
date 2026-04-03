@@ -28,7 +28,6 @@ export default function BusDetailsPage() {
   const [supervisorName, setSupervisorName] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  // حالة المودال للتعديل
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [editName, setEditName] = useState("");
   const [editNationalId, setEditNationalId] = useState("");
@@ -78,7 +77,6 @@ export default function BusDetailsPage() {
       area: editArea,
     });
 
-    // تحديث القائمة محليًا
     setStudents((prev) =>
       prev.map((s) =>
         s.id === editStudent.id
@@ -147,8 +145,12 @@ export default function BusDetailsPage() {
               <p className="text-gray-300 mb-2">🆔 {student.nationalId}</p>
               <p className="text-gray-300 mb-4">📍 {student.area}</p>
 
+              {/* QR Code بـ studentId فقط (الحل النهائي) */}
               <div className="bg-white p-4 rounded-2xl mb-4 flex justify-center">
-                <QRCode value={JSON.stringify({ id: student.id, name: student.name })} size={140} />
+                <QRCode 
+                  value={JSON.stringify({ studentId: student.id })} 
+                  size={140} 
+                />
               </div>
 
               <div className="flex gap-3">
@@ -208,7 +210,7 @@ export default function BusDetailsPage() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-1">الرقم الشخصي</label>
+                <label className="block text-gray-300 mb-1">الرقم القومي</label>
                 <input
                   type="text"
                   value={editNationalId}
