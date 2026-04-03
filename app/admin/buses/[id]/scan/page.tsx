@@ -19,7 +19,7 @@ import { useParams } from "next/navigation";
 
 export default function ScanPage() {
   const { id } = useParams<{ id: string }>();
-  const busId = id;
+  const busId = id as string;
 
   const qrRef = useRef<Html5Qrcode | null>(null);
 
@@ -82,12 +82,14 @@ export default function ScanPage() {
     }
   };
 
+  // ====================== دالة endTrip المعدلة والمحسنة ======================
   const endTrip = async () => {
     if (!activeTripId) {
       alert("لا توجد رحلة نشطة");
       return;
     }
 
+    // إيقاف الماسح أولاً
     try {
       if (qrRef.current && isRunning) {
         await qrRef.current.stop();
@@ -96,7 +98,7 @@ export default function ScanPage() {
         setIsRunning(false);
       }
     } catch (err) {
-      console.warn("[END] مشكلة إيقاف:", err);
+      console.warn("[END] مشكلة إيقاف الماسح:", err);
     }
 
     try {
@@ -110,6 +112,7 @@ export default function ScanPage() {
       const present = attSnap.size;
       const absent = total - present;
 
+      // تحديث حالة الرحلة
       const tripRef = doc(db, "buses", busId, "trips", activeTripId);
       await updateDoc(tripRef, {
         status: "finished",
@@ -119,12 +122,16 @@ export default function ScanPage() {
         absentCount: absent,
       });
 
-      // جلب اسم المشرفة من Firestore
+      // جلب اسم المشرفة
       const busDoc = await getDoc(doc(db, "buses", busId));
-      const supervisorName = busDoc.exists() ? busDoc.data()?.supervisorName || "غير محدد" : "غير محدد";
+      const supervisorName = busDoc.exists() 
+        ? busDoc.data()?.supervisorName || "غير محدد" 
+        : "غير محدد";
 
-      // إرسال الإيميل مع اسم المشرفة
-      await fetch("/api/send-email", {
+      console.log("📧 جاري إرسال الإيميل...");
+
+      // إرسال الإيميل مع انتظار كامل
+      const emailResponse = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -136,15 +143,25 @@ export default function ScanPage() {
         }),
       });
 
+      const emailResult = await emailResponse.json();
+
+      if (emailResponse.ok) {
+        console.log("✅ تم إرسال الإيميل بنجاح", emailResult);
+      } else {
+        console.error("❌ فشل إرسال الإيميل:", emailResult);
+      }
+
       setLastStudent(`تم الإنهاء ✓ حضور: ${present} | غياب: ${absent}`);
       setActiveTripId(null);
       lastDecodedText = "";
-    } catch (err) {
-      console.error("[END] خطأ:", err);
-      setLastStudent("خطأ في الإنهاء");
+
+    } catch (err: any) {
+      console.error("[END] خطأ كبير أثناء الإنهاء:", err);
+      setLastStudent("خطأ في إنهاء الرحلة");
     }
   };
 
+  // ====================== باقي الكود (startScanner + stopScanner) ======================
   const startScanner = async () => {
     if (!activeTripId) {
       alert("ابدأ الرحلة أولاً");
@@ -168,7 +185,7 @@ export default function ScanPage() {
     qrRef.current = qr;
 
     try {
-      // @ts-ignore - html5-qrcode has no official types, but it works at runtime
+      // @ts-ignore
       await qr.start(
         { facingMode: cameraFacing },
         { fps: 10, qrbox: { width: 220, height: 220 } },
@@ -180,54 +197,60 @@ export default function ScanPage() {
           setScanLock(true);
 
           try {
-            let student: any;
+            let studentId: string = "";
 
             try {
-              student = JSON.parse(decodedText);
+              const parsed = JSON.parse(decodedText);
+              studentId = parsed.studentId || parsed.id || decodedText;
             } catch {
-              const q = query(
-                collection(db, "buses", busId, "students"),
-                where("id", "==", decodedText)
-              );
-              const snap = await getDocs(q);
-
-              if (snap.empty) {
-                setLastStudent("⚠️ طالبة غير موجودة");
-                setTimeout(() => setScanLock(false), 600);
-                return;
-              }
-
-              student = snap.docs[0].data();
+              studentId = decodedText.trim();
             }
 
-            if (!student?.id) {
+            console.log("🔍 [QR] Student ID المقروء:", studentId);
+
+            if (!studentId) {
               setLastStudent("⚠️ QR غير صالح");
               setTimeout(() => setScanLock(false), 600);
               return;
             }
 
+            const studentRef = doc(db, "buses", busId, "students", studentId);
+            const studentSnap = await getDoc(studentRef);
+
+            if (!studentSnap.exists()) {
+              console.log("❌ لم يتم العثور على الطالب بـ ID:", studentId);
+              setLastStudent("⚠️ طالبة غير موجودة");
+              setTimeout(() => setScanLock(false), 800);
+              return;
+            }
+
+            const student = studentSnap.data();
+
+            console.log("✅ تم العثور على الطالب:", student.name);
+
             const attRef = collection(db, "buses", busId, "trips", activeTripId, "attendance");
-            const checkQ = query(attRef, where("studentId", "==", student.id), limit(1));
+            const checkQ = query(attRef, where("studentId", "==", studentId), limit(1));
             const existing = await getDocs(checkQ);
 
             if (!existing.empty) {
-              setLastStudent(`⚠️ ${student.name || student.id} موجودة`);
+              setLastStudent(`⚠️ ${student.name || studentId} موجودة`);
               setTimeout(() => setScanLock(false), 800);
               return;
             }
 
             await addDoc(attRef, {
-              studentId: student.id,
+              studentId: studentId,
               studentName: student.name || "غير معروف",
               nationalId: student.nationalId || "",
               area: student.area || "",
               scannedAt: new Date(),
             });
 
-            setLastStudent(`✅ ${student.name || student.id}`);
+            setLastStudent(`✅ ${student.name || studentId}`);
+
           } catch (err: any) {
             console.error("[QR] خطأ:", err);
-            setLastStudent("⚠️ خطأ");
+            setLastStudent("⚠️ خطأ في معالجة الـ QR");
           }
 
           setTimeout(() => {
@@ -241,7 +264,7 @@ export default function ScanPage() {
       setLastStudent("الماسح شغال...");
     } catch (err: any) {
       console.error("[SCANNER] فشل التشغيل:", err);
-      setLastStudent("فشل الكاميرا: " + (err.message || ""));
+      setLastStudent("فشل الكاميرا");
     }
   };
 
